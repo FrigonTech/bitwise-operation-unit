@@ -526,10 +526,15 @@ function buildSlotHTML(block, slot, label) {
   
   return `
     <div class="calc-slot">
-      <div class="slot-label">
-        <span>${label}</span>
-        ${varId ? `<span class="slot-var-name ${vc}">${vName}</span>` : ''}
-        <button class="slot-promote-btn" onclick="promoteSlot('${block.id}','${slot}')">↑ promote</button>
+      <div class="slot-label" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span>${label}</span>
+          ${varId ? `<span class="slot-var-name ${vc}" title="${vName}">${vName}</span>` : ''}
+        </div>
+        <div style="display: flex; align-items: center; gap: 4px;">
+          ${varId ? `<button class="slot-promote-btn" style="background: var(--surface2); color: var(--red); border-color: rgba(244,63,94,0.2);" onclick="unlinkVar(event, '${block.id}','${slot}')" title="Unlink variable">×</button>` : ''}
+          <button class="slot-promote-btn" onclick="promoteSlot('${block.id}','${slot}')">↑ promote</button>
+        </div>
       </div>
       <div class="slot-dropzone ${varId?'has-var':''} ${isWaitingVar && !varId?'waiting-tap':''}" id="${block.id}_${slot}_zone"
         ondragover="slotDragOver(event,'${block.id}','${slot}')"
@@ -541,6 +546,52 @@ function buildSlotHTML(block, slot, label) {
       <div class="slot-dec">${val} · 0x${hexStr}</div>
     </div>
   `;
+}
+
+// New function to disconnect a variable from a slot safely
+function unlinkVar(e, blockId, slot) {
+  if (e) e.stopPropagation();
+  const block = blocks.find(b => b.id === blockId);
+  if (!block) return;
+  
+  if (slot === 'a') {
+    block.aVarId = null;
+  } else if (slot === 'b') {
+    block.bVarId = null;
+  }
+  
+  renderBlock(block);
+}
+
+// Updated slot drop handler to force clear global payloads immediately
+function slotDrop(e, blockId, slot) {
+  e.preventDefault(); 
+  e.stopPropagation();
+  
+  document.getElementById(blockId + '_' + slot + '_zone')?.classList.remove('drag-over');
+  
+  // Use either the explicit drag payload or an active tap fallback payload
+  const currentPayload = dragPayload || tapPayload;
+  if (!currentPayload || currentPayload.type !== 'var') return;
+  
+  const block = blocks.find(b => b.id === blockId);
+  if (!block) return;
+  
+  const vid = currentPayload.varId;
+  if (!variables[vid]) return;
+  
+  if (slot === 'a') { 
+    block.aVarId = vid; 
+    block.aVal = variables[vid].value; 
+  } else { 
+    block.bVarId = vid; 
+    block.bVal = variables[vid].value; 
+  }
+  
+  // CRITICAL: Flush state entirely to prevent interface lockup
+  dragPayload = null;
+  clearTapSelection();
+  renderBlock(block);
 }
 
 // ── RENDER BLOCK ────────────────────────────────────────────────────────
