@@ -95,6 +95,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 /* CALC BLOCK */
 .calc-block { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; transition: border-color 0.2s; flex-shrink: 0; }
 .calc-block:hover { border-color: var(--border2); }
+.calc-block.interlink-error { border-color: var(--red) !important; box-shadow: 0 0 0 2px rgba(244, 63, 94, 0.4) !important; }
 
 .calc-ribbon { background: var(--surface); border-bottom: 1px solid var(--border); padding: 8px 12px; display: flex; align-items: center; gap: 8px; }
 .ribbon-label { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text3); }
@@ -114,6 +115,8 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .slot-promote-btn:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
 .slot-dec { font-family: var(--mono); font-size: 11px; color: var(--text2); }
 .slot-var-name { font-family: var(--mono); font-size: 10px; padding: 1px 6px; border-radius: 4px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80px; }
+.slot-var-name.draggable-result-label { cursor: grab; user-select: none; }
+.slot-var-name.draggable-result-label:active { cursor: grabbing; }
 
 .bit-strip { display: flex; flex-wrap: wrap; gap: 4px; min-height: 32px; }
 .bit-cell { width: 28px; height: 28px; border-radius: 5px; border: 1px solid var(--border2); background: var(--surface); color: var(--text2); font-family: var(--mono); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.1s, border-color 0.1s, color 0.1s; user-select: none; }
@@ -154,8 +157,8 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   .left-panel {
     border-right: none;
     border-bottom: 1px solid var(--border);
-    max-height: 240px; /* Constrain tool area on mobile */
-    flex-direction: row; /* Sideways layout for panels */
+    max-height: 240px; 
+    flex-direction: row; 
   }
 
   .panel-section {
@@ -168,28 +171,12 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
     border-left: 1px solid var(--border);
   }
 
-  .panel-header h3 {
-    font-size: 9px;
-  }
-  
-  .panel-header span {
-    display: none; /* Hide drag label on mobile */
-  }
+  .panel-header h3 { font-size: 9px; }
+  .panel-header span { display: none; }
+  .panel-body { padding: 8px; }
+  .op-grid { grid-template-columns: 1fr; }
+  .canvas-scroll { padding: 12px; gap: 12px; }
 
-  .panel-body {
-    padding: 8px;
-  }
-
-  .op-grid {
-    grid-template-columns: 1fr; /* Tight single stream on small widths */
-  }
-
-  .canvas-scroll {
-    padding: 12px;
-    gap: 12px;
-  }
-
-  /* Structural transformation: stack layout sequentially */
   .calc-body {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto auto;
@@ -212,30 +199,23 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   }
   
   .op-placed .op-sym { font-size: 15px; }
-
-  .op-dropzone-empty {
-    min-height: 38px;
-    font-size: 11px;
-  }
+  .op-dropzone-empty { min-height: 38px; font-size: 11px; }
 }
 
 @media (max-width: 480px) {
-  .toolbar-title {
-    font-size: 11px;
-  }
-  .btn {
-    padding: 6px 10px;
-    font-size: 11px;
-  }
-  .left-panel {
-    max-height: 180px; /* Extra compact utility panel on ultra-small screens */
-  }
-  .bit-cell {
-    width: 24px;
-    height: 24px;
-    font-size: 10px;
-  }
+  .toolbar-title { font-size: 11px; }
+  .btn { padding: 6px 10px; font-size: 11px; }
+  .left-panel { max-height: 180px; }
+  .bit-cell { width: 24px; height: 24px; font-size: 10px; }
 }
+
+/* VAR COLORS */
+.vc-0 { background: rgba(79,142,247,0.15); color: #4f8ef7; border-color: rgba(79,142,247,0.3); }
+.vc-1 { background: rgba(34,211,160,0.15); color: #22d3a0; border-color: rgba(34,211,160,0.3); }
+.vc-2 { background: rgba(167,139,250,0.15); color: #a78bfa; border-color: rgba(167,139,250,0.3); }
+.vc-3 { background: rgba(245,158,11,0.15); color: #f59e0b; border-color: rgba(245,158,11,0.3); }
+.vc-4 { background: rgba(244,63,94,0.15); color: #f43f5e; border-color: rgba(244,63,94,0.3); }
+.vc-5 { background: rgba(124,58,237,0.15); color: #7c3aed; border-color: rgba(124,58,237,0.3); }
 </style>
 </head>
 <body>
@@ -292,8 +272,8 @@ let blocks = [];
 let variables = {};
 let varCounter = 0;
 let blockCounter = 0;
-let dragPayload = null; // { type: 'op'|'var', op?, varId? }
-let tapPayload = null;  // Handles selection Fallback on touch screens
+let dragPayload = null; 
+let tapPayload = null;  
 const nameCounters = {};
 
 const VAR_COLORS = ['vc-0','vc-1','vc-2','vc-3','vc-4','vc-5'];
@@ -350,6 +330,7 @@ function makeBlock(op) {
     bits,
     aVal: 0, aVarId: null,
     bVal: 0, bVarId: null,
+    resultVarId: null,
     unary: meta.unary,
   };
   blocks.push(block);
@@ -385,6 +366,7 @@ function promoteSlot(blockId, slot) {
   const block = blocks.find(b => b.id === blockId);
   if (!block) return;
   let val, bits, srcLabel;
+  
   if (slot === 'result') {
     val = getResult(block);
     if (val === null) return;
@@ -395,11 +377,20 @@ function promoteSlot(blockId, slot) {
     bits = block.bits;
     srcLabel = slot.toUpperCase() + blockId.replace('blk_','');
   }
-  const name = srcLabel;
-  const vid = makeVar(name, val, bits);
-  if (slot === 'a') { block.aVarId = vid; }
-  else if (slot === 'b') { block.bVarId = vid; }
-  else if (slot === 'result') { block.resultVarId = vid; }
+  
+  const vid = makeVar(srcLabel, val, bits);
+  
+  if (slot === 'a') { 
+    block.aVarId = vid; 
+  } else if (slot === 'b') { 
+    block.bVarId = vid; 
+  } else if (slot === 'result') { 
+    block.resultVarId = vid; 
+  }
+  
+  dragPayload = null;
+  clearTapSelection();
+  
   renderBlock(block);
   renderVarPanel();
 }
@@ -418,25 +409,12 @@ function deleteVar(varId) {
   renderVarPanel();
 }
 
-function updateVarFromSlot(blockId, slot, newVal) {
-  const block = blocks.find(b => b.id === blockId);
-  if (!block) return;
-  if (slot === 'a' && block.aVarId) {
-    variables[block.aVarId].value = newVal;
-    variables[block.aVarId].bits = block.bits;
-  }
-  if (slot === 'b' && block.bVarId) {
-    variables[block.bVarId].value = newVal;
-    variables[block.bVarId].bits = block.bits;
-  }
-  if (slot === 'a' && block.aVarId) propagateVar(block.aVarId);
-  if (slot === 'b' && block.bVarId) propagateVar(block.bVarId);
-}
-
 function propagateVar(varId) {
   renderVarPanel();
   blocks.forEach(b => {
-    if (b.aVarId === varId || b.bVarId === varId) renderBlock(b);
+    if (b.aVarId === varId) redrawSlotBits(b, 'a');
+    if (b.bVarId === varId) redrawSlotBits(b, 'b');
+    if (b.aVarId === varId || b.bVarId === varId) redrawResult(b);
   });
 }
 
@@ -446,7 +424,14 @@ function updateResultVar(block) {
     if (r !== null) {
       variables[block.resultVarId].value = r;
       variables[block.resultVarId].bits = block.bits;
-      propagateVar(block.resultVarId);
+      renderVarPanel();
+      blocks.forEach(b => {
+        if (b.id !== block.id && (b.aVarId === block.resultVarId || b.bVarId === block.resultVarId)) {
+          redrawSlotBits(b, 'a');
+          redrawSlotBits(b, 'b');
+          redrawResult(b);
+        }
+      });
     }
   }
 }
@@ -458,9 +443,10 @@ function valToBits(val, bits) {
   return arr;
 }
 
-// ── RENDER VAR PANEL ────────────────────────────────────────────────────
+// ── RENDER VAR PANEL (HANDLERS INCLUDED WITHIN LOOP REBUILDS) ───────────
 function renderVarPanel() {
   const list = document.getElementById('var-list');
+  if (!list) return;
   const keys = Object.keys(variables);
   list.innerHTML = '';
   if (!keys.length) {
@@ -491,6 +477,8 @@ function renderVarPanel() {
       e.stopPropagation();
       deleteVar(vid);
     });
+    
+    // CRITICAL: Re-attach standard drag/click listeners directly inside panel recreation
     el.addEventListener('dragstart', e => {
       clearTapSelection();
       dragPayload = { type: 'var', varId: vid };
@@ -498,8 +486,6 @@ function renderVarPanel() {
       e.dataTransfer.effectAllowed = 'copy';
     });
     el.addEventListener('dragend', () => el.classList.remove('dragging-source'));
-    
-    // Tap selection behavior for mobile fallback
     el.addEventListener('click', e => {
       e.stopPropagation();
       handleMobileTapSelection({ type: 'var', varId: vid }, el);
@@ -514,7 +500,7 @@ function buildSlotHTML(block, slot, label) {
   const val = getSlotValue(block, slot);
   const varId = slot === 'a' ? block.aVarId : block.bVarId;
   const vc = varId ? varColor(varId) : '';
-  const vName = varId ? variables[varId]?.name : '';
+  const vName = varId ? (variables[varId]?.name || '??') : '';
   const bitsArr = valToBits(val, block.bits);
   const bitsHTML = bitsArr.map((b, i) => {
     const pos = block.bits - 1 - i;
@@ -527,11 +513,11 @@ function buildSlotHTML(block, slot, label) {
   return `
     <div class="calc-slot">
       <div class="slot-label" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-        <div style="display: flex; align-items: center; gap: 6px;">
+        <div style="display: flex; align-items: center; gap: 6px; min-width: 0;">
           <span>${label}</span>
           ${varId ? `<span class="slot-var-name ${vc}" title="${vName}">${vName}</span>` : ''}
         </div>
-        <div style="display: flex; align-items: center; gap: 4px;">
+        <div style="display: flex; align-items: center; gap: 4px; flex-shrink: 0;">
           ${varId ? `<button class="slot-promote-btn" style="background: var(--surface2); color: var(--red); border-color: rgba(244,63,94,0.2);" onclick="unlinkVar(event, '${block.id}','${slot}')" title="Unlink variable">×</button>` : ''}
           <button class="slot-promote-btn" onclick="promoteSlot('${block.id}','${slot}')">↑ promote</button>
         </div>
@@ -548,7 +534,6 @@ function buildSlotHTML(block, slot, label) {
   `;
 }
 
-// New function to disconnect a variable from a slot safely
 function unlinkVar(e, blockId, slot) {
   if (e) e.stopPropagation();
   const block = blocks.find(b => b.id === blockId);
@@ -558,19 +543,29 @@ function unlinkVar(e, blockId, slot) {
     block.aVarId = null;
   } else if (slot === 'b') {
     block.bVarId = null;
+  } else if (slot === 'result') {
+    block.resultVarId = null;
   }
   
+  dragPayload = null;
+  clearTapSelection();
   renderBlock(block);
 }
 
-// Updated slot drop handler to force clear global payloads immediately
+// ── FLASH ERROR SIGNAL FOR INTERLINK VIOLATIONS ─────────────────────────
+function flashInterlinkError(blockId) {
+  const el = document.getElementById(blockId);
+  if (!el) return;
+  el.classList.add('interlink-error');
+  setTimeout(() => el.classList.remove('interlink-error'), 500);
+}
+
 function slotDrop(e, blockId, slot) {
   e.preventDefault(); 
   e.stopPropagation();
   
   document.getElementById(blockId + '_' + slot + '_zone')?.classList.remove('drag-over');
   
-  // Use either the explicit drag payload or an active tap fallback payload
   const currentPayload = dragPayload || tapPayload;
   if (!currentPayload || currentPayload.type !== 'var') return;
   
@@ -580,6 +575,14 @@ function slotDrop(e, blockId, slot) {
   const vid = currentPayload.varId;
   if (!variables[vid]) return;
   
+  // ANTI-INTERLINK GUARD: Prevent a block's own result variable from being passed back to itself
+  if (block.resultVarId === vid) {
+    flashInterlinkError(blockId);
+    dragPayload = null;
+    clearTapSelection();
+    return;
+  }
+  
   if (slot === 'a') { 
     block.aVarId = vid; 
     block.aVal = variables[vid].value; 
@@ -588,7 +591,6 @@ function slotDrop(e, blockId, slot) {
     block.bVal = variables[vid].value; 
   }
   
-  // CRITICAL: Flush state entirely to prevent interface lockup
   dragPayload = null;
   clearTapSelection();
   renderBlock(block);
@@ -612,7 +614,7 @@ function renderBlock(block) {
   const hexRes = result !== null ? result.toString(16).toUpperCase().padStart(Math.ceil(block.bits/4),'0') : '??';
   const resVarId = block.resultVarId;
   const resVc = resVarId ? varColor(resVarId) : '';
-  const resVName = resVarId ? variables[resVarId]?.name : '';
+  const resVName = (resVarId && variables[resVarId]) ? variables[resVarId].name : '';
 
   const isWaitingOp = tapPayload && tapPayload.type === 'op';
 
@@ -652,9 +654,14 @@ function renderBlock(block) {
       }
     </div>
     <div class="result-section">
-      <div class="result-row">
+      <div class="result-row" id="${block.id}_resultrow">
         <span class="result-label">RESULT</span>
-        ${resVarId ? `<span class="slot-var-name ${resVc}">${resVName}</span>` : ''}
+        ${(resVarId && variables[resVarId]) ? `
+          <div style="display:flex; align-items:center; gap:4px;">
+            <span class="slot-var-name ${resVc} draggable-result-label" draggable="true">${resVName}</span>
+            <button class="slot-promote-btn" style="background: var(--surface2); color: var(--red); border-color: rgba(244,63,94,0.2);" onclick="unlinkVar(event, '${block.id}','result')" title="Unlink variable">×</button>
+          </div>
+        ` : ''}
         <div class="bit-strip">${resBitsHTML}</div>
         ${result !== null
           ? `<span class="result-dec">${result}</span><span class="result-hex">0x${hexRes}</span>`
@@ -664,6 +671,21 @@ function renderBlock(block) {
       </div>
     </div>
   `;
+  
+  // FIXED DRAG DELEGATION: Captures the drag event directly via an explicit, localized block query sequence
+  const resLabel = el.querySelector('.draggable-result-label');
+  if (resLabel) {
+    resLabel.addEventListener('dragstart', e => {
+      clearTapSelection();
+      dragPayload = { type: 'var', varId: resVarId };
+      e.dataTransfer.effectAllowed = 'copy';
+    });
+    resLabel.addEventListener('click', e => {
+      e.stopPropagation();
+      handleMobileTapSelection({ type: 'var', varId: resVarId }, resLabel);
+    });
+  }
+  
   updateResultVar(block);
 }
 
@@ -685,9 +707,13 @@ function addBlock(op) {
 function deleteBlock(blockId) {
   blocks = blocks.filter(b => b.id !== blockId);
   document.getElementById(blockId)?.remove();
-  if (!blocks.length) document.getElementById('no-ops').style.display = '';
+  if (!blocks.length) {
+    const noOpsEl = document.getElementById('no-ops');
+    if (noOpsEl) noOpsEl.style.display = '';
+  }
 }
 
+// ── GLOBAL RESETS ───────────────────────────────────────────────────────
 function clearAll() {
   blocks = [];
   variables = {};
@@ -695,32 +721,42 @@ function clearAll() {
   blockCounter = 0;
   clearTapSelection();
   Object.keys(nameCounters).forEach(k => delete nameCounters[k]);
-  document.getElementById('canvas').innerHTML = '';
-  const noOps = document.createElement('div');
-  noOps.className = 'no-ops';
-  noOps.id = 'no-ops';
-  noOps.innerHTML = 'Drag/Tap an <b>operator</b> from the left panel<br>or click <b>+ operation</b> to start';
-  document.getElementById('canvas').appendChild(noOps);
+  const canvas = document.getElementById('canvas');
+  if (canvas) {
+    canvas.innerHTML = `
+      <div class="no-ops" id="no-ops">
+        Drag/Tap an <b>operator</b> from the left panel<br>or click <b>+ operation</b> to start
+      </div>
+    `;
+  }
   renderVarPanel();
 }
 
 // ── BIT TOGGLE ──────────────────────────────────────────────────────────
 function toggleBit(e, blockId, slot, pos) {
-  e.stopPropagation(); // Stop slot activation triggers on small viewports
+  e.stopPropagation();
   const block = blocks.find(b => b.id === blockId);
   if (!block) return;
   const varId = slot === 'a' ? block.aVarId : block.bVarId;
   if (varId && variables[varId]) {
     variables[varId].value ^= (1 << pos);
-    propagateVar(varId);
+    // update all blocks using this var
+    blocks.forEach(b => {
+      if (b.aVarId === varId) redrawSlotBits(b, 'a');
+      if (b.bVarId === varId) redrawSlotBits(b, 'b');
+      if (b.aVarId === varId || b.bVarId === varId) redrawResult(b);
+    });
+    renderVarPanel();
   } else {
     if (slot === 'a') block.aVal ^= (1 << pos);
     else block.bVal ^= (1 << pos);
-    renderBlock(block);
+    redrawSlotBits(block, slot);
+    redrawResult(block);
   }
+  updateResultVar(block);
 }
 
-// ── SET BITS ─────────────────────────────────────────────────────────────
+// ── SET BITS — partial update only, never destroys the ribbon/slider ─────
 function setBits(blockId, val) {
   const block = blocks.find(b => b.id === blockId);
   if (!block) return;
@@ -731,8 +767,50 @@ function setBits(blockId, val) {
   block.bVal &= mask;
   if (block.aVarId && variables[block.aVarId]) variables[block.aVarId].value &= mask;
   if (block.bVarId && variables[block.bVarId]) variables[block.bVarId].value &= mask;
-  document.getElementById(blockId + '_bitsval').textContent = bits;
-  renderBlock(block);
+
+  // update counter label only — slider stays alive
+  const bitsValEl = document.getElementById(blockId + '_bitsval');
+  if (bitsValEl) bitsValEl.textContent = bits;
+
+  // partial: rebuild only the bit strips and result row, leave ribbon intact
+  redrawSlotBits(block, 'a');
+  if (!block.unary) redrawSlotBits(block, 'b');
+  redrawResult(block);
+  updateResultVar(block);
+}
+
+function redrawSlotBits(block, slot) {
+  const zone = document.getElementById(block.id + '_' + slot + '_zone');
+  if (!zone) return;
+  const val = getSlotValue(block, slot);
+  const strip = zone.querySelector('.bit-strip');
+  if (!strip) return;
+  strip.innerHTML = valToBits(val, block.bits).map((b, i) => {
+    const pos = block.bits - 1 - i;
+    return `<div class="bit-cell ${b?'on':''}" onclick="toggleBit(event,'${block.id}','${slot}',${pos})">${b}</div>`;
+  }).join('');
+  const dec = zone.parentElement?.querySelector('.slot-dec');
+  if (dec) dec.textContent = val + ' · 0x' + val.toString(16).toUpperCase().padStart(Math.ceil(block.bits/4),'0');
+}
+
+function redrawResult(block) {
+  const resultRow = document.getElementById(block.id + '_resultrow');
+  if (!resultRow) return;
+  const result = getResult(block);
+  const hexRes = result !== null ? result.toString(16).toUpperCase().padStart(Math.ceil(block.bits/4),'0') : '??';
+  const strip = resultRow.querySelector('.bit-strip');
+  if (strip) {
+    strip.innerHTML = result !== null
+      ? valToBits(result, block.bits).map((b, i) => {
+          const pos = block.bits - 1 - i;
+          return `<div class="bit-cell result-bit ${b?'on':''}" title="bit ${pos}">${b}</div>`;
+        }).join('')
+      : `<span style="font-size:11px;color:var(--text3)">waiting for operator</span>`;
+  }
+  const dec = resultRow.querySelector('.result-dec');
+  if (dec && result !== null) dec.textContent = result;
+  const hex = resultRow.querySelector('.result-hex');
+  if (hex && result !== null) hex.textContent = '0x' + hexRes;
 }
 
 // ── CLEAR OP ─────────────────────────────────────────────────────────────
@@ -746,8 +824,8 @@ function clearOp(blockId) {
 
 // ── TOUCH/CLICK SELECTION FALLBACK (MOBILE RUNTIME) ───────────────────
 function handleMobileTapSelection(payload, element) {
-  const wasAlreadySelected = tapPayload && 
-    ((payload.type === 'op' && tapPayload.op === payload.op) || 
+  const wasAlreadySelected = tapPayload &&
+    ((payload.type === 'op' && tapPayload.op === payload.op) ||
      (payload.type === 'var' && tapPayload.varId === payload.varId));
 
   clearTapSelection();
@@ -755,17 +833,24 @@ function handleMobileTapSelection(payload, element) {
   if (!wasAlreadySelected) {
     tapPayload = payload;
     element.classList.add('selected-active');
-    // Global context warning updates
-    blocks.forEach(b => renderBlock(b));
+    // highlight valid drop targets via class only — no renderBlock
+    if (payload.type === 'op') {
+      document.querySelectorAll('.op-dropzone-empty').forEach(el => el.classList.add('waiting-tap'));
+    } else if (payload.type === 'var') {
+      document.querySelectorAll('.slot-dropzone:not(.has-var)').forEach(el => el.classList.add('waiting-tap'));
+    }
   }
 }
 
 function clearTapSelection() {
   tapPayload = null;
-  document.querySelectorAll('.op-chip, .var-chip').forEach(el => {
+  document.querySelectorAll('.op-chip, .var-chip, .draggable-result-label').forEach(el => {
     el.classList.remove('selected-active');
   });
-  blocks.forEach(b => renderBlock(b));
+  // DO NOT call renderBlock here — it destroys draggable elements and their
+  // listeners while the user may still be mid-drag. Only remove waiting-tap
+  // highlight classes from drop zones without touching innerHTML.
+  document.querySelectorAll('.waiting-tap').forEach(el => el.classList.remove('waiting-tap'));
 }
 
 function handleOpZoneTap(blockId) {
@@ -786,6 +871,13 @@ function handleSlotTap(blockId, slot) {
     const vid = tapPayload.varId;
     if (!variables[vid]) return;
     
+    // TAP INTERLINK ANTI-RECURSION GUARD
+    if (block.resultVarId === vid) {
+      flashInterlinkError(blockId);
+      clearTapSelection();
+      return;
+    }
+    
     if (slot === 'a') { block.aVarId = vid; block.aVal = variables[vid].value; }
     else { block.bVarId = vid; block.bVal = variables[vid].value; }
     
@@ -793,14 +885,13 @@ function handleSlotTap(blockId, slot) {
   }
 }
 
-// Reset tap payloads if clicking empty canvas space
 document.addEventListener('click', (e) => {
-  if (!e.target.closest('.op-chip') && !e.target.closest('.var-chip') && !e.target.closest('.slot-dropzone') && !e.target.closest('.op-dropzone-empty')) {
+  if (!e.target.closest('.op-chip') && !e.target.closest('.var-chip') && !e.target.closest('.slot-dropzone') && !e.target.closest('.op-dropzone-empty') && !e.target.closest('.draggable-result-label')) {
     clearTapSelection();
   }
 });
 
-// ── DRAG: OPERATORS FROM PANEL ──────────────────────────────────────────
+// ── OPERATOR DRAG HANDLERS ──────────────────────────────────────────────
 document.querySelectorAll('.op-chip').forEach(chip => {
   chip.addEventListener('dragstart', e => {
     clearTapSelection();
@@ -809,14 +900,12 @@ document.querySelectorAll('.op-chip').forEach(chip => {
     e.dataTransfer.effectAllowed = 'copy';
   });
   chip.addEventListener('dragend', () => chip.classList.remove('dragging-source'));
-  
   chip.addEventListener('click', e => {
     e.stopPropagation();
     handleMobileTapSelection({ type: 'op', op: chip.dataset.op }, chip);
   });
 });
 
-// canvas drop to create new block
 document.getElementById('canvas').addEventListener('dragover', e => {
   if (dragPayload?.type === 'op') e.preventDefault();
 });
@@ -831,7 +920,6 @@ document.getElementById('canvas').addEventListener('drop', e => {
   }
 });
 
-// ── DRAG: OP DROP ZONES ──────────────────────────────────────────────────
 function opDragOver(e, blockId) {
   if (dragPayload?.type === 'op') { e.preventDefault(); e.stopPropagation(); }
   const zone = document.getElementById(blockId + '_opdrop');
@@ -847,33 +935,19 @@ function opDrop(e, blockId) {
   if (zone) zone.classList.remove('drag-over');
   if (dragPayload?.type !== 'op') return;
   const block = blocks.find(b => b.id === blockId);
-  if (!block) return;
+  if (!block) return; 
   block.op = dragPayload.op;
   block.unary = OP_META[dragPayload.op]?.unary || false;
   dragPayload = null;
   renderBlock(block);
 }
 
-// ── DRAG: SLOT DROP ZONES ────────────────────────────────────────────────
 function slotDragOver(e, blockId, slot) {
   if (dragPayload?.type === 'var') { e.preventDefault(); e.stopPropagation(); }
   document.getElementById(blockId + '_' + slot + '_zone')?.classList.add('drag-over');
 }
 function slotDragLeave(e, blockId, slot) {
   document.getElementById(blockId + '_' + slot + '_zone')?.classList.remove('drag-over');
-}
-function slotDrop(e, blockId, slot) {
-  e.preventDefault(); e.stopPropagation();
-  document.getElementById(blockId + '_' + slot + '_zone')?.classList.remove('drag-over');
-  if (dragPayload?.type !== 'var') return;
-  const block = blocks.find(b => b.id === blockId);
-  if (!block) return;
-  const vid = dragPayload.varId;
-  if (!variables[vid]) return;
-  if (slot === 'a') { block.aVarId = vid; block.aVal = variables[vid].value; }
-  else { block.bVarId = vid; block.bVal = variables[vid].value; }
-  dragPayload = null;
-  renderBlock(block);
 }
 
 document.addEventListener('dragend', () => { dragPayload = null; });
