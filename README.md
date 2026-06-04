@@ -1,77 +1,87 @@
-# Bitwise Operation Unit — User Guide & Instruction Manual
+# ⚡ Bitwise Operation Unit: The Ultimate Field Manual ⚡
 
-Welcome to the **Bitwise Operation Unit**, a visual, interactive simulator designed for prototyping, debugging, and understanding bitwise logic, binary states, and variable registers. This tool supports both desktop hardware (Drag and Drop) and mobile devices (Tap-to-Assign).
+Welcome to the command center of binary wizardry! Whether you are a hardcore low-level engineer or a curious developer trying to visualize how computers compute under the hood, this interactive workspace is your sandbox. 
 
----
-
-## 1. Interface Layout Overview
-
-The workspace is divided into two core functional regions:
-* **The Utility Control Sidebar (Left Panel):**
-    * **Operators Container:** Holds the 9 supported bitwise logic and shift mechanisms.
-    * **Variables Register Container:** Displays your globally declared custom registers, showing their binary patterns, decimal totals, and hex equivalents in real-time.
-* **The Computation Canvas (Main Workspace):**
-    * The scrollable canvas containing all your active operation blocks, control sliders, and numeric readouts.
+Let's cut through the fluff and get you manipulating bits like a pro.
 
 ---
 
-## 2. Core Operation Workflows
+## 🧭 The Land Map: What's on Your Screen?
 
-### Creating a Computation Block
-1. Click the **`+ operation`** button in the top toolbar to instantiate an empty calculator block on the canvas.
-2. Alternatively, drag any operator chip directly from the sidebar and drop it onto an empty area of the canvas to create a block with that operator pre-assigned.
-
-### Assigning Operators
-* **Desktop:** Drag an operator chip (e.g., `& AND`, `^ XOR`, `<< SHL`) and drop it directly onto the `drop op` container inside a block.
-* **Mobile / Touch:** Tap the desired operator chip in the sidebar (it will glow blue to indicate it is active), then tap the target block's `drop op` zone to bind it.
-* *Note:* Clicking an already assigned operator inside a block clears it back to an unassigned state.
-
-### Editing Input States (Slot A & Slot B)
-* **Direct Bit Manipulation:** Click or tap any individual bit cell inside the interactive binary strip to toggle its state (`0` $\leftrightarrow$ `1`). The decimal and hexadecimal readouts below update instantly.
-* **Bit-Width Resolution Tuning:** Use the **`bits`** range slider in the block ribbon to scale the active resolution anywhere between **1-bit** and **20-bits**. Changing the width automatically masks out high bits to prevent overflow errors.
+Your digital workshop is split into two power zones:
+* **The Left Control Deck (Sidebar):** Your toolbox. The top half holds the heavy-hitters—the **Operators**. The bottom half is your **Variables Register**, your scoreboard where your saved registers live alongside their binary, decimal, and hex conversions.
+* **The Main Workspace Canvas:** The giant scrollable field where the magic happens. This is where you spawn, edit, and link your custom calculation blocks.
 
 ---
 
-## 3. Register Promotion & Interlinking Variables
+## 🛠️ Phase 1: Building Your First Operation Block
 
-The architecture allows you to convert temporary slot configurations or raw calculation outputs into persistent, global variables.
+Ready to see some math in action? Let's cook:
 
-### Promoting an Input or Result
-1. Click **`↑ promote`** on an input slot header to map its current state out to a global variable.
-2. Click **`↑ promote result`** on a block's bottom footer to instantly convert the calculation output into a reactive global variable (automatically named `R1`, `R2`, etc.).
-3. Once promoted, the new tracking badge appears in the left **Variables** panel.
+### Step 1: Drop a Block on the Canvas
+* **The Quick Way:** Click the **`+ operation`** button in the top toolbar. BOOM. An empty calculation block appears on your workspace.
+* **The Flex Way:** Grab an operator chip (like `& AND` or `^ XOR`) from the left panel, drag it onto the canvas, and drop it anywhere. It will auto-generate a block with that operator locked in!
 
-### Feeding Variables into Inputs
-* **Desktop:** Drag a variable chip from the sidebar and drop it into the dashed `slot dropzone` of **Slot A** or **Slot B**.
-* **Mobile / Touch:** Tap the variable chip in the sidebar (it will glow green), then tap any unlinked slot dropzone to connect it.
-* *Reactive Propagation:* When an input slot is bound to a variable, toggle-clicking its bit cells writes directly back to that variable's shared memory, instantly forcing all other blocks connected to that variable to recalculate across the workspace.
-* **Unlinking:** Click the small **`×`** button next to a linked variable's badge in a slot header to safely sever the connection and return to independent bit editing.
+### Step 2: Inject the Logic Gate
+If you created an empty block, it's currently waiting for an operator. 
+* **Using a Mouse:** Drag your chosen logic chip from the left panel and slam-dunk it into the **`drop op`** box right in the middle of your block.
+* **Using a Touchscreen:** Tap the operator chip in the sidebar (it will glow to show it's primed) and then tap the target block's **`drop op`** box.
+* *Regret your choice?* Just click an assigned operator inside a block to clear it out and start over.
 
----
+### Step 3: Play with the Bits!
+Look at **Slot A** and **Slot B** inside your block. See those little grid cells? Those are individual bits.
+* **Click or Tap any cell** to flip it instantly from `0` to `1` or back again. 
+* Watch the numbers underneath update live in decimal and hex as you toggle!
 
-## 4. Built-in Failsafe Engines
-
-To maintain absolute stability and prevent layout exceptions, two background guard systems run automatically:
-
-### 1. The Anti-Interlink Loop Guard
-To prevent infinite recursive loops (where a block acts as its own grandparent dependency), **the engine prohibits dropping or tapping a block's calculation output back into its own Slot A or Slot B.**
-* If an illegal link is attempted, the block's outer border will flash red as a warning signal, and the assignment is instantly rejected.
-
-### 2. Isolated DOM Event Interception
-All drag-and-drop operations bypass local node instances and are tracked at the root window level. This ensures that even when calculation results cause instant panel refreshes, your mouse drag focus is never dropped or glitched mid-movement.
+### Step 4: Change the Reality Matrix (Bit-Width Resolution)
+Want to see how an 8-bit overflow looks compared to a 4-bit space? 
+* Grab the **`bits` slider** on the block's header ribbon. 
+* Slide it anywhere from **1-bit** all the way up to **20-bits**. The system instantly adjusts the layout and masks the arithmetic so you can witness real-world truncation bugs safely!
 
 ---
 
-## 5. Technical Specifications Reference
+## 🧬 Phase 2: Variable Promotion & Interlinking (Advanced Mode)
 
-| Operator | Mathematical Equivalent | Behavior Profile | Unary / Binary |
-| :--- | :--- | :--- | :--- |
-| **`&` AND** | $A \text{ AND } B$ | Outputs `1` if both matching bits are `1` | Binary |
-| **`\|` OR** | $A \text{ OR } B$ | Outputs `1` if at least one matching bit is `1` | Binary |
-| **`^` XOR** | $A \oplus B$ | Outputs `1` if matching bits are different | Binary |
-| **`~` NOT** | $\text{NOT } A$ | Inverts all active bits within the bit-width resolution | Unary (Disables B) |
-| **`~&` NAND** | $\text{NOT } (A \text{ AND } B)$ | Inverted AND logic gate | Binary |
-| **`~\|` NOR** | $\text{NOT } (A \text{ OR } B)$ | Inverted OR logic gate | Binary |
-| **`~^` XNOR**| $\text{NOT } (A \oplus B)$ | Inverted XOR (Outputs `1` if matching bits are identical) | Binary |
-| **`<<` SHL** | $A \times 2^B$ | Shifts bits left by $B$ places, filling gaps with `0` | Binary |
-| **`>>` SHR** | $A \gg B$ | Logical right shift, moving bits right while filling with `0` | Binary |
+This is where things get incredibly powerful. You aren't just limited to isolated blocks; you can link them together to build complex data pipelines.
+
+### The "↑ Promote" Superpower
+Did you just configure a perfect binary pattern in Slot A, or did your block just calculate a brilliant result? **Save it!**
+* Click **`↑ promote`** on any input slot or **`↑ promote result`** on the bottom of a block.
+* The system immediately extracts that data and creates a permanent global variable register in your left panel (named `A1`, `B1`, `R1`, etc.).
+
+### Building a Chain Reaction (Feeding Variables to Inputs)
+Now that you have variables in your sidebar, you can use them as inputs for *other* blocks:
+* **Drag & Drop** (or **Tap & Target**) a variable from your sidebar straight into the dashed dropzone of an input slot on *any* block.
+* **The Chain Reaction:** When a slot is linked to a variable, toggling a bit inside that slot changes the variable itself. Because that variable is shared, **every other block on your canvas using that variable will recalculate and flash its new value instantly!**
+* **The Break Up:** Want to unlock a slot and go back to standalone editing? Click the small **`×`** button next to the variable's name badge in the slot header.
+
+---
+
+## 🛡️ Built-In Failsafes: Total System Stability
+
+We built two invisible guard-dogs into the background script so you can break the math without breaking the application:
+
+* **The Anti-Interlink Loop Guard:** To prevent an infinite logic loop (e.g., a block trying to calculate its own result as an input, which would crash your browser), **the system will aggressively deny you from dropping or tapping a block's own calculation result back into itself.** If you try, the block will flash a red warning outline and reject the link.
+* **Dynamic Drag Isolation:** Because the system renders data at hyper-speed, standard drag listeners can glitch. Our drag engine intercepts movements globally at the root layout level, meaning your variable dragging stays buttery smooth even when multiple blocks are cascading calculations at the exact same millisecond.
+
+---
+
+## 📊 The Operator Cheat Sheet
+
+Quick refresher on the logic brains available in your deck:
+
+| Gate Symbol | Name | How it Thinks | Type |
+| :---: | :--- | :--- | :--- |
+| **`&`** | **AND** | Outputs `1` *only* if both Input A and Input B are `1`. | Binary |
+| **`\|`** | **OR** | Outputs `1` if *either* Input A or Input B (or both) are `1`. | Binary |
+| **`^`** | **XOR** | Outputs `1` if Input A and Input B are *different* from each other. | Binary |
+| **`~`** | **NOT** | The ultimate flipper. It inverts all your bits (`1` becomes `0`, `0` becomes `1`). | Unary (Disables Slot B) |
+| **`~&`** | **NAND** | Calculates an AND gate, then completely inverts the output. | Binary |
+| **`~\|`** | **NOR** | Calculates an OR gate, then completely inverts the output. | Binary |
+| **`~^`** | **XNOR** | Outputs `1` if Input A and Input B are *perfectly identical*. | Binary |
+| **`<<`** | **Shift Left** | Slides all bits to the left by the amount specified in Slot B, filling trailing gaps with `0`. | Binary |
+| **`>>`** | **Shift Right** | Slides all bits to the right by the amount specified in Slot B, discarding trailing drop-offs. | Binary |
+
+---
+
+Now go create some blocks, chain some registers together, and watch the binary code come alive! 🚀
