@@ -1,12 +1,10 @@
-# ⚡ Bitwise Operation Unit: The Ultimate Field Manual ⚡
+#  Bitwise Operation Unit: The Ultimate Field Manual 
 
-Welcome to the command center of binary wizardry! Whether you are a hardcore low-level engineer or a curious developer trying to visualize how computers compute under the hood, this interactive workspace is your sandbox. 
-
-Let's cut through the fluff and get you manipulating bits like a pro.
+Welcome to the command center of binary wizardry! Whether you are a hardcore low-level engineer or a curious developer trying to visualize how computers compute under the hood, this interactive workspace is your sandbox.
 
 ---
 
-## 🧭 The Land Map: What's on Your Screen?
+##  The Land Map: What's on Your Screen?
 
 Your digital workshop is split into two power zones:
 * **The Left Control Deck (Sidebar):** Your toolbox. The top half holds the heavy-hitters—the **Operators**. The bottom half is your **Variables Register**, your scoreboard where your saved registers live alongside their binary, decimal, and hex conversions.
@@ -14,7 +12,7 @@ Your digital workshop is split into two power zones:
 
 ---
 
-## 🛠️ Phase 1: Building Your First Operation Block
+##  Phase 1: Building Your First Operation Block
 
 Ready to see some math in action? Let's cook:
 
@@ -40,7 +38,7 @@ Want to see how an 8-bit overflow looks compared to a 4-bit space?
 
 ---
 
-## 🧬 Phase 2: Variable Promotion & Interlinking (Advanced Mode)
+##  Phase 2: Variable Promotion & Interlinking (Advanced Mode)
 
 This is where things get incredibly powerful. You aren't just limited to isolated blocks; you can link them together to build complex data pipelines.
 
@@ -57,7 +55,7 @@ Now that you have variables in your sidebar, you can use them as inputs for *oth
 
 ---
 
-## 🛡️ Built-In Failsafes: Total System Stability
+##  Built-In Failsafes:
 
 We built two invisible guard-dogs into the background script so you can break the math without breaking the application:
 
@@ -66,7 +64,7 @@ We built two invisible guard-dogs into the background script so you can break th
 
 ---
 
-## 📊 The Operator Cheat Sheet
+##  Operator Cheat Sheet
 
 Quick refresher on the logic brains available in your deck:
 
