@@ -860,6 +860,7 @@ function handleOpZoneTap(blockId) {
       block.op = tapPayload.op;
       block.unary = OP_META[tapPayload.op]?.unary || false;
       clearTapSelection();
+      renderBlock(block);
     }
   }
 }
@@ -882,6 +883,7 @@ function handleSlotTap(blockId, slot) {
     else { block.bVarId = vid; block.bVal = variables[vid].value; }
     
     clearTapSelection();
+    renderBlock(block);
   }
 }
 
