@@ -1,87 +1,179 @@
-#  Bitwise Operation Unit: The Ultimate Field Manual 
-
-Welcome to the command center of binary wizardry! Whether you are a hardcore low-level engineer or a curious developer trying to visualize how computers compute under the hood, this interactive workspace is your sandbox.
+# Bitwise Operation Unit — Interactive Bit Manipulation Playground
 
 [![Launch Tool](https://img.shields.io/badge/Launch%20Tool-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white)](https://frigontech.github.io/bitwise-operation-unit/)
+![HTML](https://img.shields.io/badge/HTML-E34F26?style=for-the-badge&logo=html5&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+![No Dependencies](https://img.shields.io/badge/dependencies-none-brightgreen?style=for-the-badge)
+
+A free, browser-based **bitwise operations visualizer** for learning and testing binary logic in real time. Build chained calculation blocks, flip individual bits, link variables across operations, and watch AND, OR, XOR, NOT, NAND, NOR, XNOR, shift left, and shift right propagate live — no install, no build step, no backend.
+
+> Built by [FrigonTech](https://github.com/frigontech) · [frigontech.github.io/bitwise-operation-unit](https://frigontech.github.io/bitwise-operation-unit/)
 
 ---
 
-##  The Land Map: What's on Your Screen?
+## What Is This?
 
-Your digital workshop is split into two power zones:
-* **The Left Control Deck (Sidebar):** Your toolbox. The top half holds the heavy-hitters—the **Operators**. The bottom half is your **Variables Register**, your scoreboard where your saved registers live alongside their binary, decimal, and hex conversions.
-* **The Main Workspace Canvas:** The giant scrollable field where the magic happens. This is where you spawn, edit, and link your custom calculation blocks.
+Most bitwise calculators give you a box, two inputs, and a result. This tool lets you **build a pipeline** — multiple linked operation blocks where the output of one feeds directly into the input of the next, updating everything downstream in real time.
 
----
+Designed for:
 
-##  Phase 1: Building Your First Operation Block
-
-Ready to see some math in action? Let's cook:
-
-### Step 1: Drop a Block on the Canvas
-* **The Quick Way:** Click the **`+ operation`** button in the top toolbar. BOOM. An empty calculation block appears on your workspace.
-* **The Flex Way:** Grab an operator chip (like `& AND` or `^ XOR`) from the left panel, drag it onto the canvas, and drop it anywhere. It will auto-generate a block with that operator locked in!
-
-### Step 2: Inject the Logic Gate
-If you created an empty block, it's currently waiting for an operator. 
-* **Using a Mouse:** Drag your chosen logic chip from the left panel and slam-dunk it into the **`drop op`** box right in the middle of your block.
-* **Using a Touchscreen:** Tap the operator chip in the sidebar (it will glow to show it's primed) and then tap the target block's **`drop op`** box.
-* *Regret your choice?* Just click an assigned operator inside a block to clear it out and start over.
-
-### Step 3: Play with the Bits!
-Look at **Slot A** and **Slot B** inside your block. See those little grid cells? Those are individual bits.
-* **Click or Tap any cell** to flip it instantly from `0` to `1` or back again. 
-* Watch the numbers underneath update live in decimal and hex as you toggle!
-
-### Step 4: Change the Reality Matrix (Bit-Width Resolution)
-Want to see how an 8-bit overflow looks compared to a 4-bit space? 
-* Grab the **`bits` slider** on the block's header ribbon. 
-* Slide it anywhere from **1-bit** all the way up to **20-bits**. The system instantly adjusts the layout and masks the arithmetic so you can witness real-world truncation bugs safely!
+- **CS students** learning bit manipulation, binary arithmetic, and logic gates
+- **Embedded / systems programmers** verifying masking, toggling, and clearing logic before writing it into C or C++
+- **Competitive programmers** testing bitmask tricks and shift-based optimizations
+- **Anyone** who wants to understand what `x & ~(1 << n)`, `a ^ b`, or `~a & 0xFF` actually does at the bit level
 
 ---
 
-##  Phase 2: Variable Promotion & Interlinking (Advanced Mode)
+## Features
 
-This is where things get incredibly powerful. You aren't just limited to isolated blocks; you can link them together to build complex data pipelines.
-
-### The "↑ Promote" Superpower
-Did you just configure a perfect binary pattern in Slot A, or did your block just calculate a brilliant result? **Save it!**
-* Click **`↑ promote`** on any input slot or **`↑ promote result`** on the bottom of a block.
-* The system immediately extracts that data and creates a permanent global variable register in your left panel (named `A1`, `B1`, `R1`, etc.).
-
-### Building a Chain Reaction (Feeding Variables to Inputs)
-Now that you have variables in your sidebar, you can use them as inputs for *other* blocks:
-* **Drag & Drop** (or **Tap & Target**) a variable from your sidebar straight into the dashed dropzone of an input slot on *any* block.
-* **The Chain Reaction:** When a slot is linked to a variable, toggling a bit inside that slot changes the variable itself. Because that variable is shared, **every other block on your canvas using that variable will recalculate and flash its new value instantly!**
-* **The Break Up:** Want to unlock a slot and go back to standalone editing? Click the small **`×`** button next to the variable's name badge in the slot header.
+- **9 operators** — AND `&`, OR `|`, XOR `^`, NOT `~`, NAND `~&`, NOR `~|`, XNOR `~^`, Shift Left `<<`, Shift Right `>>`
+- **Drag-and-drop operator placement** — drag a logic gate chip onto any operation block
+- **Clickable individual bits** — toggle any bit in slot A or B directly; result recalculates instantly
+- **1–20 bit width slider** per block — see real truncation and overflow behavior at any precision
+- **Variable promotion** — save any input or result as a named variable (`A1`, `B1`, `R1`...) in the sidebar
+- **Live variable propagation** — link a variable to multiple blocks; changing one bit updates every block using it simultaneously
+- **Chained operations** — promote a result, drag it into the input of the next block, build multi-stage pipelines
+- **Anti-loop guard** — blocks reject their own result variable being fed back as an input
+- **Tap support** — fully usable on touchscreen; tap an operator to prime it, tap a drop zone to place it
+- **Zero dependencies** — single self-contained HTML file, works offline after first load
 
 ---
 
-##  Built-In Failsafes:
+## The Layout
 
-We built two invisible guard-dogs into the background script so you can break the math without breaking the application:
+Your workspace is split into two zones:
 
-* **The Anti-Interlink Loop Guard:** To prevent an infinite logic loop (e.g., a block trying to calculate its own result as an input, which would crash your browser), **the system will aggressively deny you from dropping or tapping a block's own calculation result back into itself.** If you try, the block will flash a red warning outline and reject the link.
-* **Dynamic Drag Isolation:** Because the system renders data at hyper-speed, standard drag listeners can glitch. Our drag engine intercepts movements globally at the root layout level, meaning your variable dragging stays buttery smooth even when multiple blocks are cascading calculations at the exact same millisecond.
-
----
-
-##  Operator Cheat Sheet
-
-Quick refresher on the logic brains available in your deck:
-
-| Gate Symbol | Name | How it Thinks | Type |
-| :---: | :--- | :--- | :--- |
-| **`&`** | **AND** | Outputs `1` *only* if both Input A and Input B are `1`. | Binary |
-| **`\|`** | **OR** | Outputs `1` if *either* Input A or Input B (or both) are `1`. | Binary |
-| **`^`** | **XOR** | Outputs `1` if Input A and Input B are *different* from each other. | Binary |
-| **`~`** | **NOT** | The ultimate flipper. It inverts all your bits (`1` becomes `0`, `0` becomes `1`). | Unary (Disables Slot B) |
-| **`~&`** | **NAND** | Calculates an AND gate, then completely inverts the output. | Binary |
-| **`~\|`** | **NOR** | Calculates an OR gate, then completely inverts the output. | Binary |
-| **`~^`** | **XNOR** | Outputs `1` if Input A and Input B are *perfectly identical*. | Binary |
-| **`<<`** | **Shift Left** | Slides all bits to the left by the amount specified in Slot B, filling trailing gaps with `0`. | Binary |
-| **`>>`** | **Shift Right** | Slides all bits to the right by the amount specified in Slot B, discarding trailing drop-offs. | Binary |
+- **Left Sidebar** — top half holds the **Operators** panel (all 9 logic gate chips). Bottom half is the **Variables Register** — your saved registers displayed with their binary, decimal, and hex values side by side.
+- **Main Canvas** — the scrollable workspace where you spawn, configure, and chain your calculation blocks.
 
 ---
 
-Now go create some blocks, chain some registers together, and watch the binary code come alive! 🚀
+## How to Use
+
+### Step 1 — Create an Operation Block
+
+- **Quick way:** Click **`+ operation`** in the toolbar. An empty block appears on the canvas.
+- **Flex way:** Drag any operator chip (e.g. `& AND`, `^ XOR`) from the sidebar directly onto the canvas — it auto-creates a block with that operator already placed.
+
+### Step 2 — Place a Logic Operator
+
+If your block is empty, it needs an operator before it can calculate:
+
+- **Mouse:** Drag a logic chip from the sidebar and drop it into the **`drop op`** zone in the center of the block.
+- **Touchscreen:** Tap an operator chip (it glows to confirm it's primed), then tap the block's **`drop op`** target.
+- Changed your mind? Click the placed operator inside the block to clear it.
+
+### Step 3 — Set Your Input Bits
+
+Slot A and Slot B each show a row of individual bit cells:
+
+- **Click or tap any bit cell** to flip it between `0` and `1`
+- The decimal and hex values beneath each slot update live as you toggle
+- The **RESULT** row at the bottom recalculates instantly on every change
+
+### Step 4 — Adjust Bit Width
+
+- Grab the **`bits` slider** in the block's header ribbon
+- Range is **1 to 20 bits** — the layout resizes and arithmetic is masked to fit, so you can observe real truncation and overflow behavior safely at any word size
+
+---
+
+## Variable Promotion & Chaining (Advanced)
+
+This is what separates this tool from a basic bitwise calculator. You can link blocks together into a live data pipeline.
+
+### Promoting a Slot or Result
+
+Configured a useful bit pattern? Save it:
+
+- Click **`↑ promote`** on any input slot, or **`↑ promote result`** at the bottom of a block
+- The value is extracted and stored as a named variable in the sidebar (`A1`, `B2`, `R1`, etc.)
+- Names are assigned progressively — promoting the same slot twice gives `A1`, then `A2`, never a collision
+
+### Feeding Variables Into Blocks
+
+- **Drag** (or **tap-then-tap**) any variable from the sidebar into the dashed drop zone of any input slot on any block
+- Once linked, toggling a bit in that slot updates the variable itself — and **every other block using that variable recalculates instantly**
+- To unlink a slot without deleting the variable, click the small **`×`** next to the variable badge in the slot header
+
+### Building a Chain
+
+```
+Block 1: A & B  →  promote result as R1
+                         ↓
+Block 2: R1 ^ C  →  promote result as R2
+                         ↓
+Block 3: ~R2  →  final output
+```
+
+Flip any bit anywhere in the chain — every downstream block updates in the same frame.
+
+---
+
+## Built-In Safeguards
+
+- **Anti-Interlink Loop Guard** — if you attempt to drop a block's own result variable back into one of its own input slots, the block flashes a red outline and rejects the link. Prevents infinite recalculation loops.
+- **Drag Isolation** — drag events are intercepted at the root layout level, not on individual elements. This means variable dragging stays stable even while multiple blocks are propagating cascaded updates simultaneously.
+
+---
+
+## Operator Cheat Sheet
+
+| Symbol | Name | How It Works | Type |
+|:---:|---|---|:---:|
+| `&` | AND | Output `1` only if **both** A and B bits are `1` | Binary |
+| `\|` | OR | Output `1` if **either** A or B bit is `1` | Binary |
+| `^` | XOR | Output `1` if A and B bits are **different** | Binary |
+| `~` | NOT | Inverts **every** bit — `1` becomes `0`, `0` becomes `1` | Unary |
+| `~&` | NAND | AND result, then fully inverted | Binary |
+| `~\|` | NOR | OR result, then fully inverted | Binary |
+| `~^` | XNOR | Output `1` if A and B bits are **identical** | Binary |
+| `<<` | Shift Left | Slides all bits left by B positions, fills gaps with `0` | Binary |
+| `>>` | Shift Right | Slides all bits right by B positions, discards overflow | Binary |
+
+---
+
+## Running Locally
+
+No build step required — just open the file:
+
+```bash
+git clone https://github.com/frigontech/bitwise-operation-unit.git
+cd bitwise-operation-unit
+open index.html          # macOS
+start index.html         # Windows
+xdg-open index.html      # Linux
+```
+
+Or serve it:
+
+```bash
+npx serve .
+# → http://localhost:3000
+```
+
+---
+
+## Deploying to GitHub Pages
+
+```
+1. Rename BitOpUnit.html → index.html at the repo root
+2. Repo Settings → Pages → Source: Deploy from branch → main → / (root)
+3. Save — live at https://<username>.github.io/bitwise-operation-unit/ in ~60 seconds
+```
+
+---
+
+## Related Topics
+
+`bit manipulation` · `bitwise operators` · `binary calculator` · `logic gates` · `bitmask` · `bit shifting` · `binary visualization` · `AND OR XOR NOT` · `bitwise AND calculator` · `interactive binary tool` · `low-level programming` · `embedded systems` · `computer science education` · `C bitwise operators` · `bit toggling` · `bit masking`
+
+---
+
+## License
+
+MIT — free to use, modify, and deploy.
+
+---
+
+*Made by [FrigonTech](https://github.com/frigontech) — indie dev tools for programmers who think in bits.*
