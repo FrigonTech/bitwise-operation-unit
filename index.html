@@ -81,7 +81,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .var-empty { font-size: 12px; color: var(--text3); text-align: center; padding: 20px 10px; line-height: 1.6; }
 
 /* MAIN CANVAS */
-.main { display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+.main { display: flex; flex-direction: column; overflow: hidden; min-width: 0; flex: 1 1 0%; }
 .toolbar { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; flex-shrink: 0; background: var(--panel); }
 .toolbar-title { font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--accent); letter-spacing: 0.05em; margin-right: auto; }
 .btn { padding: 8px 14px; border-radius: var(--radius); font-family: var(--sans); font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid; transition: all 0.15s; white-space: nowrap; }
@@ -89,13 +89,21 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .btn-primary:hover { background: #6b9ff8; }
 .btn-ghost { background: transparent; border-color: var(--border2); color: var(--text2); }
 .btn-ghost:hover { background: var(--surface2); color: var(--text); }
+.btn-vars-toggle { display: none; }
 
 .canvas-scroll { flex: 1 1 0%; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; scrollbar-width: thin; scrollbar-color: var(--border2) transparent; }
+
+/* desktop canvas-area is just a transparent passthrough */
+.canvas-area { display: flex; flex-direction: row; flex: 1 1 0%; min-height: 0; overflow: hidden; }
 
 /* CALC BLOCK */
 .calc-block { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; transition: border-color 0.2s; flex-shrink: 0; }
 .calc-block:hover { border-color: var(--border2); }
 .calc-block.interlink-error { border-color: var(--red) !important; box-shadow: 0 0 0 2px rgba(244, 63, 94, 0.4) !important; }
+
+/* inner row: main content + desktop remarks side by side */
+.calc-inner { display: flex; flex-direction: row; min-width: 0; }
+.calc-main-col { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 
 .calc-ribbon { background: var(--surface); border-bottom: 1px solid var(--border); padding: 8px 12px; display: flex; align-items: center; gap: 8px; }
 .ribbon-label { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text3); }
@@ -124,13 +132,46 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .bit-cell.result-bit { cursor: default; }
 .bit-cell.result-bit.on { background: var(--green); border-color: var(--green); color: #0d0f14; }
 
-.op-drop-zone { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: 80px; width: 75px; align-self: center; }
+/* ── OPERATOR DROP ZONE + INLINE DROPDOWN ─────────────────────────────── */
+.op-drop-zone { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: 80px; width: 75px; align-self: center; position: relative; }
 .op-placed { background: var(--surface); border: 1px solid var(--border2); border-radius: var(--radius); padding: 8px 10px; cursor: pointer; text-align: center; transition: border-color 0.15s; width: 100%; }
 .op-placed:hover { border-color: var(--red); }
 .op-placed .op-sym { font-family: var(--mono); font-size: 18px; font-weight: 700; }
 .op-placed .op-clear { font-size: 9px; color: var(--text3); white-space: nowrap; }
-.op-dropzone-empty { width: 100%; min-height: 70px; border: 1.5px dashed var(--border2); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--text3); transition: border-color 0.15s, background 0.15s; text-align: center; cursor: pointer; }
+.op-dropzone-empty { width: 100%; min-height: 70px; border: 1.5px dashed var(--border2); border-radius: var(--radius); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; color: var(--text3); transition: border-color 0.15s, background 0.15s; text-align: center; cursor: pointer; gap: 4px; padding: 6px; }
+.op-dropzone-empty .dz-hint { font-size: 9px; opacity: 0.6; }
 .op-dropzone-empty.drag-over, .op-dropzone-empty.waiting-tap { border-color: var(--accent); background: rgba(79,142,247,0.08); color: var(--accent); }
+
+/* operator inline dropdown — portal: appended to body, position:fixed */
+.op-inline-dropdown {
+  position: fixed;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  z-index: 9999;
+  min-width: 150px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+  overflow-y: auto;
+  max-height: 70vh;
+  animation: ddDropIn 0.13s ease;
+}
+@keyframes ddDropIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.op-inline-dropdown .dd-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 12px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.1s;
+  white-space: nowrap;
+}
+.op-inline-dropdown .dd-item:last-child { border-bottom: none; }
+.op-inline-dropdown .dd-item:hover, .op-inline-dropdown .dd-item:active { background: var(--surface2); }
+.op-inline-dropdown .dd-sym { font-family: var(--mono); font-size: 14px; font-weight: 700; min-width: 22px; }
+.op-inline-dropdown .dd-lbl { color: var(--text2); }
 
 .slot-dropzone { min-height: 36px; border: 1.5px dashed var(--border); border-radius: var(--radius); padding: 4px; transition: border-color 0.15s, background 0.15s; cursor: pointer; }
 .slot-dropzone.has-var { border-color: var(--border2); cursor: default; }
@@ -143,39 +184,175 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .result-hex { font-family: var(--mono); font-size: 11px; color: var(--text2); }
 .result-incomplete { font-family: var(--mono); font-size: 11px; color: var(--text3); }
 
+/* ── REMARKS PANEL — DESKTOP (right column) ─────────────────────────────── */
+.remarks-col {
+  width: 190px;
+  flex-shrink: 0;
+  border-left: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+}
+.remarks-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 10px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  border-bottom: 1px solid transparent;
+  width: 100%;
+  text-align: left;
+  color: inherit;
+  font-family: var(--sans);
+}
+.remarks-toggle-btn:hover { background: var(--surface2); }
+.remarks-toggle-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text2);
+  flex: 1;
+}
+.remarks-chevron {
+  font-size: 12px;
+  color: var(--text3);
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+/* desktop col open state */
+.remarks-col.open .remarks-toggle-btn { border-bottom-color: var(--border); }
+.remarks-col.open .remarks-chevron { transform: rotate(180deg); }
+/* mobile panel open state */
+.remarks-mobile.open .remarks-toggle-btn { border-bottom-color: var(--border); }
+.remarks-mobile.open .remarks-chevron { transform: rotate(180deg); }
+
+.remarks-body {
+  display: none;
+  flex-direction: column;
+  padding: 8px;
+  flex: 1;
+}
+/* body visible when EITHER desktop col OR mobile panel is open */
+.remarks-col.open .remarks-body,
+.remarks-mobile.open .remarks-body { display: flex; }
+
+.remarks-textarea {
+  flex: 1;
+  min-height: 80px;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 12px;
+  line-height: 1.5;
+  padding: 8px;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+}
+.remarks-textarea::placeholder { color: var(--text3); }
+.remarks-textarea:focus { border-color: var(--accent); }
+
+/* ── REMARKS PANEL — MOBILE (bottom of block) ───────────────────────────── */
+.remarks-mobile {
+  display: none;          /* hidden on desktop; shown via media query */
+  flex-direction: column;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+.remarks-mobile .remarks-body { padding: 8px; }
+.remarks-mobile .remarks-textarea { min-height: 80px; }
+
 .no-ops { font-size: 12px; color: var(--text3); text-align: center; padding: 40px 20px; line-height: 1.8; }
 
-/* ── RESPONSIVE MEDIA QUERIES ────────────────────────────────────────── */
+/* ── MOBILE VARIABLES COLLAPSIBLE SIDEBAR ───────────────────────────────
+   Sits beside .canvas-scroll in a flex row — no overlay, no blur,
+   canvas stays fully interactive even when sidebar is open.           */
+.mobile-vars-sidebar {
+  display: none; /* shown only in mobile media query */
+  flex-direction: column;
+  width: 0;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--panel);
+  border-left: 1px solid var(--border);
+  transition: width 0.22s cubic-bezier(0.4,0,0.2,1);
+}
+.mobile-vars-sidebar.open {
+  width: 200px;
+}
+.mobile-vars-sidebar-inner {
+  width: 200px; /* fixed inner width; outer clips it */
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.mvs-header {
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.mvs-header h3 {
+  font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text2); flex: 1;
+}
+.mvs-close {
+  background: none; border: none; color: var(--text3); cursor: pointer; font-size: 18px; line-height: 1; padding: 0;
+}
+.mvs-close:hover { color: var(--text); }
+.mvs-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border2) transparent;
+}
+
+/* ── RESPONSIVE ──────────────────────────────────────────────────────────── */
 @media (max-width: 850px) {
   .app {
     grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: 1fr;   /* full height, no top panel row */
     height: 100vh;
     overflow: hidden;
   }
 
-  .left-panel {
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-    max-height: 240px; 
-    flex-direction: row; 
+  /* completely remove the left panel (operators + vars) from mobile */
+  .left-panel { display: none !important; }
+
+  /* show vars toggle button in toolbar */
+  .btn-vars-toggle { display: flex !important; }
+
+  /* desktop remarks col → hidden; mobile remarks shown */
+  .remarks-col { display: none !important; }
+  .remarks-mobile { display: flex; }
+
+  /* .main becomes a column: toolbar on top, then a flex-row of canvas + vars sidebar */
+  .main { flex-direction: column; }
+
+  /* canvas-area: flex row so vars sidebar slides in beside it */
+  .canvas-area {
+    display: flex;
+    flex-direction: row;
+    flex: 1 1 0%;
+    min-height: 0;
+    overflow: hidden;
   }
 
-  .panel-section {
-    flex: 1 1 50%;
-    max-height: 100% !important;
-  }
+  .canvas-scroll { flex: 1 1 0%; padding: 12px; gap: 12px; overflow-y: auto; }
 
-  .panel-section + .panel-section {
-    border-top: none;
-    border-left: 1px solid var(--border);
-  }
-
-  .panel-header h3 { font-size: 9px; }
-  .panel-header span { display: none; }
-  .panel-body { padding: 8px; }
-  .op-grid { grid-template-columns: 1fr; }
-  .canvas-scroll { padding: 12px; gap: 12px; }
+  /* show the mobile vars sidebar element */
+  .mobile-vars-sidebar { display: flex; }
 
   .calc-body {
     grid-template-columns: 1fr;
@@ -186,7 +363,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   .op-drop-zone {
     width: 100%;
     min-height: auto;
-    height: 44px;
+    height: 52px;
     flex-direction: row;
   }
 
@@ -197,7 +374,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
     justify-content: center;
     gap: 12px;
   }
-  
+
   .op-placed .op-sym { font-size: 15px; }
   .op-dropzone-empty { min-height: 38px; font-size: 11px; }
 }
@@ -205,8 +382,9 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 @media (max-width: 480px) {
   .toolbar-title { font-size: 11px; }
   .btn { padding: 6px 10px; font-size: 11px; }
-  .left-panel { max-height: 180px; }
   .bit-cell { width: 24px; height: 24px; font-size: 10px; }
+  .mobile-vars-sidebar.open { width: 160px; }
+  .mobile-vars-sidebar-inner { width: 160px; }
 }
 
 /* VAR COLORS */
@@ -220,8 +398,9 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 </head>
 <body>
 <div class="app">
+  <!-- LEFT PANEL -->
   <div class="left-panel">
-    <div class="panel-section" style="flex: 0 0 auto; max-height: 52%;">
+    <div class="panel-section" style="flex: 1 1 auto;">
       <div class="panel-header">
         <div class="panel-header-icon" style="background:#4f8ef7"></div>
         <h3>Operators</h3>
@@ -240,27 +419,46 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
         </div>
       </div>
     </div>
-    <div class="panel-section">
+    <!-- Desktop-only variables section -->
+    <div class="panel-section vars-panel">
       <div class="panel-header">
         <div class="panel-header-icon" style="background:#22d3a0"></div>
         <h3>Variables</h3>
         <span style="font-size:10px;color:var(--text3);margin-left:auto">drag/tap →</span>
       </div>
       <div class="panel-body">
-        <div class="var-list" id="var-list"></div>
+        <div class="var-list" id="var-list-desktop"></div>
       </div>
     </div>
   </div>
 
+  <!-- MAIN -->
   <div class="main">
     <div class="toolbar">
       <span class="toolbar-title">BITWISE OPERATION UNIT</span>
+      <button class="btn btn-ghost btn-vars-toggle" id="vars-toggle-btn" onclick="toggleVarsSidebar()">⊞ vars</button>
       <button class="btn btn-ghost" onclick="clearAll()">clear all</button>
       <button class="btn btn-primary" onclick="addBlock()">+ operation</button>
     </div>
-    <div class="canvas-scroll" id="canvas">
-      <div class="no-ops" id="no-ops">
-        Drag/Tap an <b>operator</b> from the left panel<br>or click <b>+ operation</b> to start
+    <!-- canvas-area: flex row — canvas + vars sidebar sit side by side, no overlay -->
+    <div class="canvas-area">
+      <div class="canvas-scroll" id="canvas">
+        <div class="no-ops" id="no-ops">
+          Click <b>+ operation</b> to start,<br>then tap the ⊕ to pick an operator
+        </div>
+      </div>
+      <!-- Mobile vars sidebar — inline, no overlay, no blur -->
+      <div class="mobile-vars-sidebar" id="mobile-vars-sidebar">
+        <div class="mobile-vars-sidebar-inner">
+          <div class="mvs-header">
+            <div class="panel-header-icon" style="background:#22d3a0"></div>
+            <h3>Variables</h3>
+            <button class="mvs-close" onclick="toggleVarsSidebar()">×</button>
+          </div>
+          <div class="mvs-body">
+            <div class="var-list" id="var-list-mobile"></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -272,9 +470,10 @@ let blocks = [];
 let variables = {};
 let varCounter = 0;
 let blockCounter = 0;
-let dragPayload = null; 
-let tapPayload = null;  
+let dragPayload = null;
+let tapPayload = null;
 const nameCounters = {};
+const blockRemarks = {}; // { blockId: text, blockId+'_d': bool, blockId+'_m': bool }
 
 const VAR_COLORS = ['vc-0','vc-1','vc-2','vc-3','vc-4','vc-5'];
 function varColor(id) {
@@ -324,14 +523,13 @@ function computeOp(op, a, b, bits) {
 function makeBlock(op) {
   const id = 'blk_' + (++blockCounter);
   const meta = OP_META[op] || OP_META['AND'];
-  const bits = 8;
   const block = {
     id, op,
-    bits,
+    bits: 8,
     aVal: 0, aVarId: null,
     bVal: 0, bVarId: null,
     resultVarId: null,
-    unary: meta.unary,
+    unary: meta ? meta.unary : false,
   };
   blocks.push(block);
   return block;
@@ -366,7 +564,6 @@ function promoteSlot(blockId, slot) {
   const block = blocks.find(b => b.id === blockId);
   if (!block) return;
   let val, bits, srcLabel;
-  
   if (slot === 'result') {
     val = getResult(block);
     if (val === null) return;
@@ -377,28 +574,18 @@ function promoteSlot(blockId, slot) {
     bits = block.bits;
     srcLabel = slot.toUpperCase() + blockId.replace('blk_','');
   }
-  
   const vid = makeVar(srcLabel, val, bits);
-  
-  if (slot === 'a') { 
-    block.aVarId = vid; 
-  } else if (slot === 'b') { 
-    block.bVarId = vid; 
-  } else if (slot === 'result') { 
-    block.resultVarId = vid; 
-  }
-  
+  if (slot === 'a') block.aVarId = vid;
+  else if (slot === 'b') block.bVarId = vid;
+  else if (slot === 'result') block.resultVarId = vid;
   dragPayload = null;
   clearTapSelection();
-  
   renderBlock(block);
   renderVarPanel();
 }
 
 function deleteVar(varId) {
-  if (tapPayload && tapPayload.type === 'var' && tapPayload.varId === varId) {
-    clearTapSelection();
-  }
+  if (tapPayload && tapPayload.type === 'var' && tapPayload.varId === varId) clearTapSelection();
   delete variables[varId];
   blocks.forEach(b => {
     if (b.aVarId === varId) b.aVarId = null;
@@ -407,15 +594,6 @@ function deleteVar(varId) {
     renderBlock(b);
   });
   renderVarPanel();
-}
-
-function propagateVar(varId) {
-  renderVarPanel();
-  blocks.forEach(b => {
-    if (b.aVarId === varId) redrawSlotBits(b, 'a');
-    if (b.bVarId === varId) redrawSlotBits(b, 'b');
-    if (b.aVarId === varId || b.bVarId === varId) redrawResult(b);
-  });
 }
 
 function updateResultVar(block) {
@@ -443,55 +621,55 @@ function valToBits(val, bits) {
   return arr;
 }
 
-// ── RENDER VAR PANEL (HANDLERS INCLUDED WITHIN LOOP REBUILDS) ───────────
+// ── RENDER VAR PANEL (both desktop list + mobile drawer list) ────────────
+function attachVarChipEvents(el, vid) {
+  el.querySelector('[data-delete-var]').addEventListener('click', e => {
+    e.stopPropagation();
+    deleteVar(vid);
+  });
+  el.addEventListener('dragstart', e => {
+    clearTapSelection();
+    dragPayload = { type: 'var', varId: vid };
+    el.classList.add('dragging-source');
+    e.dataTransfer.effectAllowed = 'copy';
+  });
+  el.addEventListener('dragend', () => el.classList.remove('dragging-source'));
+  el.addEventListener('click', e => {
+    e.stopPropagation();
+    handleMobileTapSelection({ type: 'var', varId: vid }, el);
+  });
+}
+
 function renderVarPanel() {
-  const list = document.getElementById('var-list');
-  if (!list) return;
-  const keys = Object.keys(variables);
-  list.innerHTML = '';
-  if (!keys.length) {
-    list.innerHTML = '<div class="var-empty">Promote bits from slots<br>to map variables</div>';
-    return;
-  }
-  keys.forEach(vid => {
-    const v = variables[vid];
-    const vc = varColor(vid);
-    const bitsStr = valToBits(v.value, v.bits).join('');
-    const el = document.createElement('div');
-    el.className = 'var-chip';
-    if (tapPayload && tapPayload.type === 'var' && tapPayload.varId === vid) {
-      el.classList.add('selected-active');
+  ['var-list-desktop', 'var-list-mobile'].forEach(listId => {
+    const list = document.getElementById(listId);
+    if (!list) return;
+    const keys = Object.keys(variables);
+    list.innerHTML = '';
+    if (!keys.length) {
+      list.innerHTML = '<div class="var-empty">Promote bits from slots<br>to map variables</div>';
+      return;
     }
-    el.draggable = true;
-    el.dataset.varId = vid;
-    el.innerHTML = `
-      <span class="var-badge ${vc}">${v.name}</span>
-      <div class="var-info">
-        <div class="var-bits-preview">${bitsStr}</div>
-        <div class="var-dec">${v.value} · 0x${v.value.toString(16).toUpperCase().padStart(Math.ceil(v.bits/4),'0')}</div>
-      </div>
-      <button class="var-delete" title="delete" data-delete-var="${vid}">×</button>
-    `;
-    
-    el.querySelector('[data-delete-var]').addEventListener('click', e => {
-      e.stopPropagation();
-      deleteVar(vid);
+    keys.forEach(vid => {
+      const v = variables[vid];
+      const vc = varColor(vid);
+      const bitsStr = valToBits(v.value, v.bits).join('');
+      const el = document.createElement('div');
+      el.className = 'var-chip';
+      if (tapPayload && tapPayload.type === 'var' && tapPayload.varId === vid) el.classList.add('selected-active');
+      el.draggable = true;
+      el.dataset.varId = vid;
+      el.innerHTML = `
+        <span class="var-badge ${vc}">${v.name}</span>
+        <div class="var-info">
+          <div class="var-bits-preview">${bitsStr}</div>
+          <div class="var-dec">${v.value} · 0x${v.value.toString(16).toUpperCase().padStart(Math.ceil(v.bits/4),'0')}</div>
+        </div>
+        <button class="var-delete" title="delete" data-delete-var="${vid}">×</button>
+      `;
+      attachVarChipEvents(el, vid);
+      list.appendChild(el);
     });
-    
-    // CRITICAL: Re-attach standard drag/click listeners directly inside panel recreation
-    el.addEventListener('dragstart', e => {
-      clearTapSelection();
-      dragPayload = { type: 'var', varId: vid };
-      el.classList.add('dragging-source');
-      e.dataTransfer.effectAllowed = 'copy';
-    });
-    el.addEventListener('dragend', () => el.classList.remove('dragging-source'));
-    el.addEventListener('click', e => {
-      e.stopPropagation();
-      handleMobileTapSelection({ type: 'var', varId: vid }, el);
-    });
-    
-    list.appendChild(el);
   });
 }
 
@@ -501,28 +679,25 @@ function buildSlotHTML(block, slot, label) {
   const varId = slot === 'a' ? block.aVarId : block.bVarId;
   const vc = varId ? varColor(varId) : '';
   const vName = varId ? (variables[varId]?.name || '??') : '';
-  const bitsArr = valToBits(val, block.bits);
-  const bitsHTML = bitsArr.map((b, i) => {
+  const bitsHTML = valToBits(val, block.bits).map((b, i) => {
     const pos = block.bits - 1 - i;
-    return `<div class="bit-cell ${b?'on':''}" data-block="${block.id}" data-slot="${slot}" data-pos="${pos}" onclick="toggleBit(event, '${block.id}','${slot}',${pos})">${b}</div>`;
+    return `<div class="bit-cell ${b?'on':''}" onclick="toggleBit(event,'${block.id}','${slot}',${pos})">${b}</div>`;
   }).join('');
   const hexStr = val.toString(16).toUpperCase().padStart(Math.ceil(block.bits/4),'0');
-  
   const isWaitingVar = tapPayload && tapPayload.type === 'var';
-  
   return `
     <div class="calc-slot">
-      <div class="slot-label" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-        <div style="display: flex; align-items: center; gap: 6px; min-width: 0;">
+      <div class="slot-label" style="display:flex;align-items:center;justify-content:space-between;width:100%">
+        <div style="display:flex;align-items:center;gap:6px;min-width:0">
           <span>${label}</span>
           ${varId ? `<span class="slot-var-name ${vc}" title="${vName}">${vName}</span>` : ''}
         </div>
-        <div style="display: flex; align-items: center; gap: 4px; flex-shrink: 0;">
-          ${varId ? `<button class="slot-promote-btn" style="background: var(--surface2); color: var(--red); border-color: rgba(244,63,94,0.2);" onclick="unlinkVar(event, '${block.id}','${slot}')" title="Unlink variable">×</button>` : ''}
+        <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+          ${varId ? `<button class="slot-promote-btn" style="color:var(--red);border-color:rgba(244,63,94,0.2)" onclick="unlinkVar(event,'${block.id}','${slot}')" title="Unlink">×</button>` : ''}
           <button class="slot-promote-btn" onclick="promoteSlot('${block.id}','${slot}')">↑ promote</button>
         </div>
       </div>
-      <div class="slot-dropzone ${varId?'has-var':''} ${isWaitingVar && !varId?'waiting-tap':''}" id="${block.id}_${slot}_zone"
+      <div class="slot-dropzone ${varId?'has-var':''} ${isWaitingVar&&!varId?'waiting-tap':''}" id="${block.id}_${slot}_zone"
         ondragover="slotDragOver(event,'${block.id}','${slot}')"
         ondragleave="slotDragLeave(event,'${block.id}','${slot}')"
         ondrop="slotDrop(event,'${block.id}','${slot}')"
@@ -530,29 +705,22 @@ function buildSlotHTML(block, slot, label) {
         <div class="bit-strip">${bitsHTML}</div>
       </div>
       <div class="slot-dec">${val} · 0x${hexStr}</div>
-    </div>
-  `;
+    </div>`;
 }
 
 function unlinkVar(e, blockId, slot) {
   if (e) e.stopPropagation();
   const block = blocks.find(b => b.id === blockId);
   if (!block) return;
-  
-  if (slot === 'a') {
-    block.aVarId = null;
-  } else if (slot === 'b') {
-    block.bVarId = null;
-  } else if (slot === 'result') {
-    block.resultVarId = null;
-  }
-  
+  if (slot === 'a') block.aVarId = null;
+  else if (slot === 'b') block.bVarId = null;
+  else if (slot === 'result') block.resultVarId = null;
   dragPayload = null;
   clearTapSelection();
   renderBlock(block);
 }
 
-// ── FLASH ERROR SIGNAL FOR INTERLINK VIOLATIONS ─────────────────────────
+// ── FLASH ERROR ─────────────────────────────────────────────────────────
 function flashInterlinkError(blockId) {
   const el = document.getElementById(blockId);
   if (!el) return;
@@ -561,45 +729,130 @@ function flashInterlinkError(blockId) {
 }
 
 function slotDrop(e, blockId, slot) {
-  e.preventDefault(); 
-  e.stopPropagation();
-  
+  e.preventDefault(); e.stopPropagation();
   document.getElementById(blockId + '_' + slot + '_zone')?.classList.remove('drag-over');
-  
   const currentPayload = dragPayload || tapPayload;
   if (!currentPayload || currentPayload.type !== 'var') return;
-  
   const block = blocks.find(b => b.id === blockId);
   if (!block) return;
-  
   const vid = currentPayload.varId;
   if (!variables[vid]) return;
-  
-  // ANTI-INTERLINK GUARD: Prevent a block's own result variable from being passed back to itself
-  if (block.resultVarId === vid) {
-    flashInterlinkError(blockId);
-    dragPayload = null;
-    clearTapSelection();
-    return;
-  }
-  
-  if (slot === 'a') { 
-    block.aVarId = vid; 
-    block.aVal = variables[vid].value; 
-  } else { 
-    block.bVarId = vid; 
-    block.bVal = variables[vid].value; 
-  }
-  
+  if (block.resultVarId === vid) { flashInterlinkError(blockId); dragPayload = null; clearTapSelection(); return; }
+  if (slot === 'a') { block.aVarId = vid; block.aVal = variables[vid].value; }
+  else { block.bVarId = vid; block.bVal = variables[vid].value; }
   dragPayload = null;
   clearTapSelection();
   renderBlock(block);
+}
+
+// ── OPERATOR INLINE DROPDOWN (body portal) ───────────────────────────────
+let activeDropdown = null;
+
+function openOpDropdown(blockId) {
+  if (tapPayload && tapPayload.type === 'op') {
+    handleOpZoneTap(blockId);
+    return;
+  }
+  closeOpDropdown();
+  const opZone = document.querySelector(`#${blockId}_op_zone`);
+  if (!opZone) return;
+  const dzEmpty = opZone.querySelector('.op-dropzone-empty');
+  if (!dzEmpty) return; // op already placed
+
+  const dd = document.createElement('div');
+  dd.className = 'op-inline-dropdown';
+  dd.id = 'dd_' + blockId;
+
+  Object.entries(OP_META).forEach(([op, meta]) => {
+    const item = document.createElement('div');
+    item.className = 'dd-item';
+    item.innerHTML = `<span class="dd-sym" style="color:${opColor(op)}">${meta.sym}</span><span class="dd-lbl">${meta.label}</span>`;
+    const pickOp = (e) => {
+      e.stopPropagation();
+      if (e.cancelable) e.preventDefault();
+      const block = blocks.find(b => b.id === blockId);
+      if (block) { block.op = op; block.unary = meta.unary; }
+      closeOpDropdown();
+      if (block) renderBlock(block);
+    };
+    item.addEventListener('mousedown', pickOp);
+    item.addEventListener('touchend', pickOp, { passive: false });
+    dd.appendChild(item);
+  });
+
+  // Portal: attach to body so no parent overflow can clip it
+  document.body.appendChild(dd);
+  activeDropdown = blockId;
+
+  // Position using trigger's viewport rect
+  const rect = dzEmpty.getBoundingClientRect();
+  const ddH = Math.min(dd.scrollHeight, window.innerHeight * 0.7);
+  const spaceBelow = window.innerHeight - rect.bottom;
+  const spaceAbove = rect.top;
+
+  let top;
+  if (spaceBelow >= ddH || spaceBelow >= spaceAbove) {
+    // open downward
+    top = rect.bottom + 6;
+  } else {
+    // open upward
+    top = rect.top - ddH - 6;
+  }
+
+  // center horizontally on trigger, keep within viewport
+  let left = rect.left + rect.width / 2 - 75; // 75 = half of min-width 150
+  left = Math.max(8, Math.min(left, window.innerWidth - 158));
+
+  dd.style.top = top + 'px';
+  dd.style.left = left + 'px';
+}
+
+function closeOpDropdown() {
+  if (activeDropdown) {
+    document.getElementById('dd_' + activeDropdown)?.remove();
+    activeDropdown = null;
+  }
+}
+
+document.addEventListener('mousedown', e => {
+  if (activeDropdown && !e.target.closest('.op-inline-dropdown') && !e.target.closest('.op-dropzone-empty')) closeOpDropdown();
+});
+document.addEventListener('touchstart', e => {
+  if (activeDropdown && !e.target.closest('.op-inline-dropdown') && !e.target.closest('.op-dropzone-empty')) closeOpDropdown();
+}, { passive: true });
+
+// ── REMARKS ───────────────────────────────────────────────────────────────
+function saveRemark(blockId, value) {
+  blockRemarks[blockId + '_text'] = value;
+  // Sync to ALL textareas in this block (desktop col + mobile panel)
+  const el = document.getElementById(blockId);
+  if (el) {
+    el.querySelectorAll('.remarks-textarea').forEach(ta => {
+      if (ta.value !== value) ta.value = value;
+    });
+  }
+}
+
+function toggleRemarksPanel(blockId) {
+  // Single open state shared by both desktop and mobile panels
+  blockRemarks[blockId + '_open'] = !blockRemarks[blockId + '_open'];
+  const isOpen = blockRemarks[blockId + '_open'];
+  // Apply to whichever panel is currently in the DOM
+  ['_rem_d', '_rem_m'].forEach(suffix => {
+    const panel = document.getElementById(blockId + suffix);
+    if (panel) panel.classList.toggle('open', isOpen);
+  });
 }
 
 // ── RENDER BLOCK ────────────────────────────────────────────────────────
 function renderBlock(block) {
   const el = document.getElementById(block.id);
   if (!el) return;
+
+  // Snapshot any live textarea value before wiping innerHTML
+  el.querySelectorAll('.remarks-textarea').forEach(ta => {
+    if (ta.value) blockRemarks[block.id + '_text'] = ta.value;
+  });
   const meta = OP_META[block.op] || {};
   const isUnary = meta.unary;
   const result = getResult(block);
@@ -615,64 +868,86 @@ function renderBlock(block) {
   const resVarId = block.resultVarId;
   const resVc = resVarId ? varColor(resVarId) : '';
   const resVName = (resVarId && variables[resVarId]) ? variables[resVarId].name : '';
-
   const isWaitingOp = tapPayload && tapPayload.type === 'op';
+  const savedRemark = blockRemarks[block.id + '_text'] || '';
+
+  const remarkTA = `<textarea class="remarks-textarea" placeholder="Add notes, remarks, observations…" oninput="saveRemark('${block.id}',this.value)">${savedRemark}</textarea>`;
 
   el.innerHTML = `
-    <div class="calc-ribbon">
-      <span class="ribbon-label">op #${block.id.replace('blk_','')}</span>
-      <div class="bits-ctrl">
-        <label>bits</label>
-        <input type="range" class="bits-slider" min="1" max="20" value="${block.bits}" oninput="setBits('${block.id}',this.value)">
-        <span class="bits-val" id="${block.id}_bitsval">${block.bits}</span>
-      </div>
-      <div class="ribbon-spacer"></div>
-      <button class="ribbon-del" title="delete block" onclick="deleteBlock('${block.id}')">×</button>
-    </div>
-    <div class="calc-body ${isUnary?'unary':''}">
-      ${buildSlotHTML(block, 'a', 'A')}
-      <div class="op-drop-zone" id="${block.id}_op_zone">
-        ${block.op
-          ? `<div class="op-placed op-${block.op}" onclick="clearOp('${block.id}')">
-               <div class="op-sym" style="color:${opColor(block.op)}">${meta.sym}</div>
-               <div class="op-clear">clear</div>
-             </div>`
-          : `<div class="op-dropzone-empty ${isWaitingOp?'waiting-tap':''}" id="${block.id}_opdrop" 
-               ondragover="opDragOver(event,'${block.id}')"
-               ondragleave="opDragLeave(event,'${block.id}')"
-               ondrop="opDrop(event,'${block.id}')"
-               onclick="handleOpZoneTap('${block.id}')">drop op</div>`
-        }
-      </div>
-      ${isUnary
-        ? `<div class="calc-slot" style="opacity:0.15;pointer-events:none">
-             <div class="slot-label">B</div>
-             <div class="slot-dropzone"><div class="bit-strip"></div></div>
-             <div class="slot-dec">—</div>
-           </div>`
-        : buildSlotHTML(block, 'b', 'B')
-      }
-    </div>
-    <div class="result-section">
-      <div class="result-row" id="${block.id}_resultrow">
-        <span class="result-label">RESULT</span>
-        ${(resVarId && variables[resVarId]) ? `
-          <div style="display:flex; align-items:center; gap:4px;">
-            <span class="slot-var-name ${resVc} draggable-result-label" draggable="true">${resVName}</span>
-            <button class="slot-promote-btn" style="background: var(--surface2); color: var(--red); border-color: rgba(244,63,94,0.2);" onclick="unlinkVar(event, '${block.id}','result')" title="Unlink variable">×</button>
+    <div class="calc-inner">
+      <div class="calc-main-col">
+        <div class="calc-ribbon">
+          <span class="ribbon-label">op #${block.id.replace('blk_','')}</span>
+          <div class="bits-ctrl">
+            <label>bits</label>
+            <input type="range" class="bits-slider" min="1" max="20" value="${block.bits}" oninput="setBits('${block.id}',this.value)">
+            <span class="bits-val" id="${block.id}_bitsval">${block.bits}</span>
           </div>
-        ` : ''}
-        <div class="bit-strip">${resBitsHTML}</div>
-        ${result !== null
-          ? `<span class="result-dec">${result}</span><span class="result-hex">0x${hexRes}</span>`
-          : `<span class="result-incomplete">—</span>`
-        }
-        <button class="slot-promote-btn" style="margin-left:auto" onclick="promoteSlot('${block.id}','result')">↑ promote result</button>
+          <div class="ribbon-spacer"></div>
+          <button class="ribbon-del" title="delete block" onclick="deleteBlock('${block.id}')">×</button>
+        </div>
+        <div class="calc-body ${isUnary?'unary':''}">
+          ${buildSlotHTML(block, 'a', 'A')}
+          <div class="op-drop-zone" id="${block.id}_op_zone">
+            ${block.op
+              ? `<div class="op-placed op-${block.op}" onclick="clearOp('${block.id}')">
+                   <div class="op-sym" style="color:${opColor(block.op)}">${meta.sym}</div>
+                   <div class="op-clear">click to clear</div>
+                 </div>`
+              : `<div class="op-dropzone-empty ${isWaitingOp?'waiting-tap':''}" id="${block.id}_opdrop"
+                   ondragover="opDragOver(event,'${block.id}')"
+                   ondragleave="opDragLeave(event,'${block.id}')"
+                   ondrop="opDrop(event,'${block.id}')"
+                   onclick="openOpDropdown('${block.id}')">
+                   ⊕
+                   <span class="dz-hint">drop or click</span>
+                 </div>`
+            }
+          </div>
+          ${isUnary
+            ? `<div class="calc-slot" style="opacity:0.15;pointer-events:none">
+                 <div class="slot-label">B</div>
+                 <div class="slot-dropzone"><div class="bit-strip"></div></div>
+                 <div class="slot-dec">—</div>
+               </div>`
+            : buildSlotHTML(block, 'b', 'B')
+          }
+        </div>
+        <div class="result-section">
+          <div class="result-row" id="${block.id}_resultrow">
+            <span class="result-label">RESULT</span>
+            ${(resVarId && variables[resVarId]) ? `
+              <div style="display:flex;align-items:center;gap:4px">
+                <span class="slot-var-name ${resVc} draggable-result-label" draggable="true">${resVName}</span>
+                <button class="slot-promote-btn" style="color:var(--red);border-color:rgba(244,63,94,0.2)" onclick="unlinkVar(event,'${block.id}','result')" title="Unlink">×</button>
+              </div>` : ''}
+            <div class="bit-strip">${resBitsHTML}</div>
+            ${result !== null
+              ? `<span class="result-dec">${result}</span><span class="result-hex">0x${hexRes}</span>`
+              : `<span class="result-incomplete">—</span>`}
+            <button class="slot-promote-btn" style="margin-left:auto" onclick="promoteSlot('${block.id}','result')">↑ promote result</button>
+          </div>
+        </div>
+        <!-- Mobile remarks (bottom) -->
+        <div class="remarks-mobile ${blockRemarks[block.id+'_open']?'open':''}" id="${block.id}_rem_m">
+          <button class="remarks-toggle-btn" onclick="toggleRemarksPanel('${block.id}')">
+            <span class="remarks-toggle-label">✎ remarks</span>
+            <span class="remarks-chevron">▾</span>
+          </button>
+          <div class="remarks-body">${remarkTA}</div>
+        </div>
       </div>
-    </div>
-  `;
-  
-  // FIXED DRAG DELEGATION: Captures the drag event directly via an explicit, localized block query sequence
+      <!-- Desktop remarks col (right side) -->
+      <div class="remarks-col ${blockRemarks[block.id+'_open']?'open':''}" id="${block.id}_rem_d">
+        <button class="remarks-toggle-btn" onclick="toggleRemarksPanel('${block.id}')">
+          <span class="remarks-toggle-label">✎ remarks</span>
+          <span class="remarks-chevron">▾</span>
+        </button>
+        <div class="remarks-body">${remarkTA}</div>
+      </div>
+    </div>`;
+
+  // Re-attach drag listener on draggable result label
   const resLabel = el.querySelector('.draggable-result-label');
   if (resLabel) {
     resLabel.addEventListener('dragstart', e => {
@@ -685,7 +960,7 @@ function renderBlock(block) {
       handleMobileTapSelection({ type: 'var', varId: resVarId }, resLabel);
     });
   }
-  
+
   updateResultVar(block);
 }
 
@@ -706,6 +981,8 @@ function addBlock(op) {
 
 function deleteBlock(blockId) {
   blocks = blocks.filter(b => b.id !== blockId);
+  // clean up remarks state
+  Object.keys(blockRemarks).filter(k => k.startsWith(blockId)).forEach(k => delete blockRemarks[k]);
   document.getElementById(blockId)?.remove();
   if (!blocks.length) {
     const noOpsEl = document.getElementById('no-ops');
@@ -721,14 +998,9 @@ function clearAll() {
   blockCounter = 0;
   clearTapSelection();
   Object.keys(nameCounters).forEach(k => delete nameCounters[k]);
+  Object.keys(blockRemarks).forEach(k => delete blockRemarks[k]);
   const canvas = document.getElementById('canvas');
-  if (canvas) {
-    canvas.innerHTML = `
-      <div class="no-ops" id="no-ops">
-        Drag/Tap an <b>operator</b> from the left panel<br>or click <b>+ operation</b> to start
-      </div>
-    `;
-  }
+  if (canvas) canvas.innerHTML = `<div class="no-ops" id="no-ops">Drag/Tap an <b>operator</b> from the left panel<br>or click <b>+ operation</b> to start</div>`;
   renderVarPanel();
 }
 
@@ -740,7 +1012,6 @@ function toggleBit(e, blockId, slot, pos) {
   const varId = slot === 'a' ? block.aVarId : block.bVarId;
   if (varId && variables[varId]) {
     variables[varId].value ^= (1 << pos);
-    // update all blocks using this var
     blocks.forEach(b => {
       if (b.aVarId === varId) redrawSlotBits(b, 'a');
       if (b.bVarId === varId) redrawSlotBits(b, 'b');
@@ -756,7 +1027,7 @@ function toggleBit(e, blockId, slot, pos) {
   updateResultVar(block);
 }
 
-// ── SET BITS — partial update only, never destroys the ribbon/slider ─────
+// ── SET BITS ─────────────────────────────────────────────────────────────
 function setBits(blockId, val) {
   const block = blocks.find(b => b.id === blockId);
   if (!block) return;
@@ -767,12 +1038,8 @@ function setBits(blockId, val) {
   block.bVal &= mask;
   if (block.aVarId && variables[block.aVarId]) variables[block.aVarId].value &= mask;
   if (block.bVarId && variables[block.bVarId]) variables[block.bVarId].value &= mask;
-
-  // update counter label only — slider stays alive
   const bitsValEl = document.getElementById(blockId + '_bitsval');
   if (bitsValEl) bitsValEl.textContent = bits;
-
-  // partial: rebuild only the bit strips and result row, leave ribbon intact
   redrawSlotBits(block, 'a');
   if (!block.unary) redrawSlotBits(block, 'b');
   redrawResult(block);
@@ -822,18 +1089,15 @@ function clearOp(blockId) {
   renderBlock(block);
 }
 
-// ── TOUCH/CLICK SELECTION FALLBACK (MOBILE RUNTIME) ───────────────────
+// ── TOUCH/CLICK SELECTION FALLBACK ───────────────────────────────────────
 function handleMobileTapSelection(payload, element) {
   const wasAlreadySelected = tapPayload &&
     ((payload.type === 'op' && tapPayload.op === payload.op) ||
      (payload.type === 'var' && tapPayload.varId === payload.varId));
-
   clearTapSelection();
-
   if (!wasAlreadySelected) {
     tapPayload = payload;
     element.classList.add('selected-active');
-    // highlight valid drop targets via class only — no renderBlock
     if (payload.type === 'op') {
       document.querySelectorAll('.op-dropzone-empty').forEach(el => el.classList.add('waiting-tap'));
     } else if (payload.type === 'var') {
@@ -844,12 +1108,7 @@ function handleMobileTapSelection(payload, element) {
 
 function clearTapSelection() {
   tapPayload = null;
-  document.querySelectorAll('.op-chip, .var-chip, .draggable-result-label').forEach(el => {
-    el.classList.remove('selected-active');
-  });
-  // DO NOT call renderBlock here — it destroys draggable elements and their
-  // listeners while the user may still be mid-drag. Only remove waiting-tap
-  // highlight classes from drop zones without touching innerHTML.
+  document.querySelectorAll('.op-chip, .var-chip, .draggable-result-label').forEach(el => el.classList.remove('selected-active'));
   document.querySelectorAll('.waiting-tap').forEach(el => el.classList.remove('waiting-tap'));
 }
 
@@ -871,24 +1130,18 @@ function handleSlotTap(blockId, slot) {
     if (!block) return;
     const vid = tapPayload.varId;
     if (!variables[vid]) return;
-    
-    // TAP INTERLINK ANTI-RECURSION GUARD
-    if (block.resultVarId === vid) {
-      flashInterlinkError(blockId);
-      clearTapSelection();
-      return;
-    }
-    
+    if (block.resultVarId === vid) { flashInterlinkError(blockId); clearTapSelection(); return; }
     if (slot === 'a') { block.aVarId = vid; block.aVal = variables[vid].value; }
     else { block.bVarId = vid; block.bVal = variables[vid].value; }
-    
     clearTapSelection();
     renderBlock(block);
   }
 }
 
 document.addEventListener('click', (e) => {
-  if (!e.target.closest('.op-chip') && !e.target.closest('.var-chip') && !e.target.closest('.slot-dropzone') && !e.target.closest('.op-dropzone-empty') && !e.target.closest('.draggable-result-label')) {
+  if (!e.target.closest('.op-chip') && !e.target.closest('.var-chip') &&
+      !e.target.closest('.slot-dropzone') && !e.target.closest('.op-dropzone-empty') &&
+      !e.target.closest('.draggable-result-label')) {
     clearTapSelection();
   }
 });
@@ -914,30 +1167,24 @@ document.getElementById('canvas').addEventListener('dragover', e => {
 document.getElementById('canvas').addEventListener('drop', e => {
   if (dragPayload?.type !== 'op') return;
   const zone = e.target.closest('.op-dropzone-empty, .op-placed');
-  if (zone) return; 
+  if (zone) return;
   const blockEl = e.target.closest('.calc-block');
-  if (!blockEl) {
-    addBlock(dragPayload.op);
-    dragPayload = null;
-  }
+  if (!blockEl) { addBlock(dragPayload.op); dragPayload = null; }
 });
 
 function opDragOver(e, blockId) {
   if (dragPayload?.type === 'op') { e.preventDefault(); e.stopPropagation(); }
-  const zone = document.getElementById(blockId + '_opdrop');
-  if (zone) zone.classList.add('drag-over');
+  document.getElementById(blockId + '_opdrop')?.classList.add('drag-over');
 }
 function opDragLeave(e, blockId) {
-  const zone = document.getElementById(blockId + '_opdrop');
-  if (zone) zone.classList.remove('drag-over');
+  document.getElementById(blockId + '_opdrop')?.classList.remove('drag-over');
 }
 function opDrop(e, blockId) {
   e.preventDefault(); e.stopPropagation();
-  const zone = document.getElementById(blockId + '_opdrop');
-  if (zone) zone.classList.remove('drag-over');
+  document.getElementById(blockId + '_opdrop')?.classList.remove('drag-over');
   if (dragPayload?.type !== 'op') return;
   const block = blocks.find(b => b.id === blockId);
-  if (!block) return; 
+  if (!block) return;
   block.op = dragPayload.op;
   block.unary = OP_META[dragPayload.op]?.unary || false;
   dragPayload = null;
@@ -953,6 +1200,12 @@ function slotDragLeave(e, blockId, slot) {
 }
 
 document.addEventListener('dragend', () => { dragPayload = null; });
+
+// ── MOBILE VARIABLES SIDEBAR (inline, no overlay) ────────────────────────
+function toggleVarsSidebar() {
+  document.getElementById('mobile-vars-sidebar')?.classList.toggle('open');
+}
+
 renderVarPanel();
 </script>
 </body>
