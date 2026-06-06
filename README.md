@@ -2,6 +2,8 @@
 
 Welcome to the command center of binary wizardry! Whether you are a hardcore low-level engineer or a curious developer trying to visualize how computers compute under the hood, this interactive workspace is your sandbox.
 
+[![Use It](https://img.shields.io/badge/Visit%20Demo-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white)](https://frigontech.github.io/bitwise-operation-unit/)
+
 ---
 
 ##  The Land Map: What's on Your Screen?
